@@ -1,0 +1,25 @@
+name: Jest Tests
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  run_tests:
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '/run-tests')
+    name: Run Jest Tests
+    runs-on: ubuntu-22.04
+    steps:
+            - name: Checkout repo
+              uses: actions/checkout@v2
+
+            - name: Use Node 17.x
+              uses: actions/setup-node@v2
+              with:
+                  node-version: 17.x
+
+            - name: Install deps and build (with cache)
+              uses: bahmutov/npm-install@v1
+
+            - name: Lint
+              run: npm run lint
