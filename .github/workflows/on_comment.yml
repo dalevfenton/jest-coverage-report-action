@@ -40,7 +40,7 @@ jobs:
           echo "$GITHUB_CONTEXT"
 
       - name: Run Tests and Comment
-        uses: dalevfenton/jest-coverage-report-action@v2
+        uses: dalevfenton/jest-coverage-report-action
         with:
           test-script: npm test -- --ci --coverage --maxWorkers=2
           package-manager: npm
