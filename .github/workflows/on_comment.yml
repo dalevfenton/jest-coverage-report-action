@@ -37,7 +37,7 @@ jobs:
         uses: ArtiomTr/jest-coverage-report-action@v2
         with:
           test-script: npm test -- --ci --coverage --maxWorkers=2
-          package-manager: NPM
+          package-manager: npm
           skip-step: install
           annotations: none
           prnumber: ${{ github.event.issue.number }}
