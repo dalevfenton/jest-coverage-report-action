@@ -1,4 +1,4 @@
-import { setFailed, setOutput } from '@actions/core';
+import { info, setFailed, setOutput } from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 
 import { createCoverageAnnotations } from './annotations/createCoverageAnnotations';
@@ -33,6 +33,8 @@ export const run = async (
         getOptions
     );
     const isInPR = !!options?.pullRequest;
+    info(`isInPR: ${isInPR}`);
+    info(JSON.stringify(options?.pullRequest));
 
     if (!isInitialized || !options) {
         throw Error('Initialization failed.');
@@ -60,12 +62,14 @@ export const run = async (
             return getCurrentBranch();
         }
     );
+    info(`initialBranch: ${initialBranch}`);
 
     const [isHeadSwitched] = await runStage(
         'switchToHead',
         dataCollector,
         async (skip) => {
             const head = options?.pullRequest?.head;
+            info(`head: ${head}`);
 
             // no need to switch branch when:
             // - this is not a PR
@@ -78,6 +82,7 @@ export const run = async (
             await checkoutRef(head!, 'covbot-pr-head-remote', 'covbot/pr-head');
         }
     );
+    info(`isHeadSwitched: ${isHeadSwitched}`);
 
     const [isHeadCoverageGenerated, headCoverage] = await runStage(
         'headCoverage',
@@ -105,6 +110,7 @@ export const run = async (
         dataCollector,
         async (skip) => {
             const base = options?.pullRequest?.base;
+            info(`base: ${base}`);
 
             // no need to switch branch when:
             // - this is not a PR
