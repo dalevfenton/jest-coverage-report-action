@@ -10,16 +10,42 @@ jobs:
     name: Run Jest Tests
     runs-on: ubuntu-22.04
     steps:
-            - name: Checkout repo
-              uses: actions/checkout@v2
+      - name: Get PR branch
+        uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+      - name: Set latest commit status as pending
+        uses: myrotvorets/set-commit-status-action@master
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.comment-branch.outputs.head_ref }}
 
-            - name: Use Node 17.x
-              uses: actions/setup-node@v2
-              with:
-                  node-version: 17.x
+      - name: Use Node 17.x
+        uses: actions/setup-node@v2
+        with:
+            node-version: 17.x
 
-            - name: Install deps and build (with cache)
-              uses: bahmutov/npm-install@v1
+      - name: Install deps and build (with cache)
+        uses: bahmutov/npm-install@v1
 
-            - name: Lint
-              run: npm run lint
+      - name: Run Tests and Comment
+        uses: ArtiomTr/jest-coverage-report-action@v2
+        with:
+          test-script: npm test -- --ci --coverage --maxWorkers=2
+          package-manager: NPM
+          skip-step: install
+          annotations: none
+          prnumber: ${{ github.event.issue.number }}
+
+      - name: Set latest commit status as ${{ job.status }}
+        uses: myrotvorets/set-commit-status-action@master
+        if: always()
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
