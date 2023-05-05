@@ -34,7 +34,7 @@ export const run = async (
     );
     const isInPR = !!options?.pullRequest;
     info(`isInPR: ${isInPR}`);
-    info(JSON.stringify(options?.pullRequest));
+    info(JSON.stringify(options, null, 2));
 
     if (!isInitialized || !options) {
         throw Error('Initialization failed.');
