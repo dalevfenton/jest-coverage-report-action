@@ -42,5 +42,4 @@ jobs:
           skip-step: install
           annotations: none
           prnumber: ${{ github.event.issue.number }}
-          debug: ${{ contains(matrix.status, 'error') }}
-
+          debug: ${{ matrix.status == 'error' }}
