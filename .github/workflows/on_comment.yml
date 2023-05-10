@@ -50,7 +50,6 @@ jobs:
 
       - name: run_tests
         uses: dalevfenton/jest-coverage-report-action@main
-        continue-on-error: true
         with:
           test-script: npm test -- --ci --coverage --maxWorkers=2
           package-manager: npm
@@ -60,12 +59,14 @@ jobs:
           debug: ${{ matrix.status == 'error' }}
 
       - name: Dump run-tests context
+        if: ${{ success() || failure() }}
         env:
           STEP_CONTEXT: ${{ toJson(job) }}
         run: |
           echo "$STEP_CONTEXT"
 
       - name: Save Job Output
+        if: ${{ success() || failure() }}
         uses: cloudposse/github-action-matrix-outputs-write@main
         id: out
         with:
@@ -73,6 +74,7 @@ jobs:
           matrix-key: ${{ matrix.status }}
           outputs: |-
             input: ${{ matrix.status }}
+            output: ${{ job.status }}
 
   read:
     if: always()
