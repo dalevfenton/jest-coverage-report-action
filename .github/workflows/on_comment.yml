@@ -21,7 +21,7 @@ jobs:
           status: pending
 
   run_tests:
-    name: ${{ matrix.status }}-tests
+    name: Run Tests
     runs-on: ubuntu-22.04
     needs: set_pending
     strategy:
@@ -43,14 +43,15 @@ jobs:
       - name: Install deps and build (with cache)
         uses: bahmutov/npm-install@v1
 
-      - name: Dump GitHub context
+      - name: Dump GitHub input context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: |
           echo "$GITHUB_CONTEXT"
 
-      - name: Run Tests and Comment
+      - name: run_tests
         uses: dalevfenton/jest-coverage-report-action@main
+        continue-on-error: true
         with:
           test-script: npm test -- --ci --coverage --maxWorkers=2
           package-manager: npm
@@ -59,11 +60,45 @@ jobs:
           prnumber: ${{ github.event.issue.number }}
           debug: ${{ matrix.status == 'error' }}
 
+      - name: Dump run-tests context
+        env:
+          STEP_CONTEXT: ${{ toJson(job.steps) }}
+        run: |
+          echo "$STEP_CONTEXT"
+
+      - name: Save Job Output
+        uses: cloudposse/github-action-matrix-outputs-write@main
+          id: out
+          with:
+            matrix-step-name: run_tests
+            matrix-key: ${{ matrix.status }}
+            outputs: |-
+              input: ${{ matrix.status }}
+              status: ${{ job.steps.run_tests.outcome }}
+
+  read:
+    if: always()
+    needs: run_tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: cloudposse/github-action-matrix-outputs-read@main
+        id: read
+        with:
+          matrix-step-name: run_tests
+      - name: Dump matrix output
+        env:
+          MATRIX_CONTEXT: ${{ toJson(steps.read.outputs.result) }}
+        run: |
+          echo "$MATRIX_CONTEXT"
+
+    outputs:
+      result: "${{ steps.read.outputs.result }}"
+
   set_completed_status:
     if: always()
     name: Set Completed Status
     runs-on: ubuntu-22.04
-    needs: [success-tests, error-tests]
+    needs: read
     steps:
       - name: Dump Jobs context
         env:
@@ -76,4 +111,4 @@ jobs:
         with:
           sha: ${{ steps.comment-branch.outputs.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          status: ${{ job.status }}
+          status: ${{ fromJson(needs.read.outputs.result).success.status && fromJson(needs.read.outputs.result).error.status }}
