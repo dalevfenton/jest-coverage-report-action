@@ -9,16 +9,11 @@ jobs:
     if: github.event.issue.pull_request && contains(github.event.comment.body, '/run-tests')
     name: Run Jest Tests
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        status: [success, error]
     steps:
-      - name: Get PR branch
-        uses: xt0rted/pull-request-comment-branch@v1
-        id: comment-branch
-      - name: Set latest commit status as pending
-        uses: myrotvorets/set-commit-status-action@master
-        with:
-          sha: ${{ steps.comment-branch.outputs.head_sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          status: pending
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
@@ -47,11 +42,5 @@ jobs:
           skip-step: install
           annotations: none
           prnumber: ${{ github.event.issue.number }}
+          debug: contains(matrix.status, 'error')
 
-      - name: Set latest commit status as ${{ job.status }}
-        uses: myrotvorets/set-commit-status-action@master
-        if: always()
-        with:
-          sha: ${{ steps.comment-branch.outputs.head_sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          status: ${{ job.status }}

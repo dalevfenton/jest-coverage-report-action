@@ -1,4 +1,4 @@
-import { getInput } from '@actions/core';
+import { getInput, info } from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import * as yup from 'yup';
 
@@ -114,7 +114,11 @@ export const getOptions = async (): Promise<Options> => {
     const prNumber: number | null = Number(
         getInput('prnumber') || context?.payload?.pull_request?.number
     );
+    const debug = getInput('debug');
     const output = getInput('output');
+
+    info(`debug: ${debug}`);
+
     let pullRequest = context?.payload?.pull_request || null;
 
     if (!pullRequest && !Number.isNaN(prNumber)) {
@@ -141,6 +145,7 @@ export const getOptions = async (): Promise<Options> => {
             prNumber: prNumber || null,
             pullRequest,
             output,
+            debug,
         })) as Options;
 
         return options;
