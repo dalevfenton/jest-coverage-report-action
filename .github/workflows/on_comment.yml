@@ -74,7 +74,7 @@ jobs:
           matrix-step-name: run_tests
           matrix-key: ${{ matrix.status }}
           outputs: |-
-            success ${{ job.status == 'success' }}
+            success: ${{ job.status == 'success' }}
 
   set_completed_status:
     if: always()
