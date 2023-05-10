@@ -21,9 +21,9 @@ jobs:
           ref: ${{ steps.comment-branch.outputs.head_ref }}
 
       - name: Use Node 17.x
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-            node-version: 17.x
+            node-version: 17
 
       - name: Install deps and build (with cache)
         uses: bahmutov/npm-install@v1

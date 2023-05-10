@@ -117,8 +117,6 @@ export const getOptions = async (): Promise<Options> => {
     const debug = getInput('debug');
     const output = getInput('output');
 
-    info(`debug: ${debug}`);
-
     let pullRequest = context?.payload?.pull_request || null;
 
     if (!pullRequest && !Number.isNaN(prNumber)) {
@@ -147,6 +145,12 @@ export const getOptions = async (): Promise<Options> => {
             output,
             debug,
         })) as Options;
+
+        info(JSON.stringify(options, null, 2));
+
+        if (debug) {
+            throw new Error('throwing a debug error');
+        }
 
         return options;
     } catch (err) {
