@@ -21,7 +21,6 @@ jobs:
           status: pending
 
   run_tests:
-    if: github.event.issue.pull_request && contains(github.event.comment.body, '/run-tests')
     name: ${{ matrix.status }}-tests
     runs-on: ubuntu-22.04
     needs: set_pending
@@ -68,7 +67,7 @@ jobs:
     steps:
       - name: Dump Jobs context
         env:
-          JOBS_CONTEXT: ${{ toJson(jobs) }}
+          JOBS_CONTEXT: ${{ toJson(needs) }}
         run: |
           echo "$JOBS_CONTEXT"
       - name: Set latest commit status as ${{ job.status }}
