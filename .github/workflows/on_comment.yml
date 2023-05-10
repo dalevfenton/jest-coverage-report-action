@@ -113,4 +113,4 @@ jobs:
         with:
           sha: ${{ steps.comment-branch.outputs.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          status: ${{ (fromJson(needs.read.outputs.result).success.output == 'success' && fromJson(needs.read.outputs.result).error.output == 'success') && 'success' || 'failure' }}
+          status: ${{ (fromJson(needs.read.outputs.result).output.error == 'success' && fromJson(needs.read.outputs.result).output.success == 'success') && 'success' || 'failure' }}
