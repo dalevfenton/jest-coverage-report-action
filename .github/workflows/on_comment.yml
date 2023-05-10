@@ -21,6 +21,7 @@ jobs:
           status: pending
 
   run_tests:
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '/run-tests')
     name: Run Tests
     runs-on: ubuntu-22.04
     needs: set_pending
@@ -73,14 +74,17 @@ jobs:
           matrix-step-name: run_tests
           matrix-key: ${{ matrix.status }}
           outputs: |-
-            input: ${{ matrix.status }}
-            output: ${{ job.status }}
+            success ${{ job.status == 'success' }}
 
-  read:
+  set_completed_status:
     if: always()
+    name: Set Completed Status
+    runs-on: ubuntu-22.04
     needs: run_tests
-    runs-on: ubuntu-latest
     steps:
+      - name: Get PR branch
+        uses: xt0rted/pull-request-comment-branch@v2
+        id: comment-branch
       - uses: cloudposse/github-action-matrix-outputs-read@main
         id: read
         with:
@@ -90,27 +94,10 @@ jobs:
           MATRIX_CONTEXT: ${{ toJson(steps.read.outputs.result) }}
         run: |
           echo "$MATRIX_CONTEXT"
-    outputs:
-      result: "${{ steps.read.outputs.result }}"
-
-  set_completed_status:
-    if: always()
-    name: Set Completed Status
-    runs-on: ubuntu-22.04
-    needs: read
-    steps:
-      - name: Get PR branch
-        uses: xt0rted/pull-request-comment-branch@v2
-        id: comment-branch
-      - name: Dump Jobs context
-        env:
-          JOBS_CONTEXT: ${{ toJson(needs) }}
-        run: |
-          echo "$JOBS_CONTEXT"
       - name: Set latest commit status as ${{ job.status }}
         uses: myrotvorets/set-commit-status-action@master
         if: always()
         with:
           sha: ${{ steps.comment-branch.outputs.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          status: ${{ (fromJson(needs.read.outputs.result).output.success == 'success' && fromJson(needs.read.outputs.result).output.success2 == 'success') && 'success' || 'failure' }}
+          status: ${{ (fromJson(steps.read.outputs.result).success.success && fromJson(steps.read.outputs.result).success.success2) && 'success' || 'failure' }}
