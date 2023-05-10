@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Get PR branch
-        uses: xt0rted/pull-request-comment-branch@v1
+        uses: xt0rted/pull-request-comment-branch@v2
         id: comment-branch
       - name: Set latest commit status as pending
         uses: myrotvorets/set-commit-status-action@master
@@ -71,7 +71,7 @@ jobs:
         id: out
         with:
           matrix-step-name: run_tests
-          matrix-key: ${{ matrix.status }}
+          matrix-key: ${{ matrix.status }}-status
           outputs: |-
             input: ${{ matrix.status }}
             output: ${{ job.status }}
@@ -90,7 +90,6 @@ jobs:
           MATRIX_CONTEXT: ${{ toJson(steps.read.outputs.result) }}
         run: |
           echo "$MATRIX_CONTEXT"
-
     outputs:
       result: "${{ steps.read.outputs.result }}"
 
@@ -101,7 +100,7 @@ jobs:
     needs: read
     steps:
       - name: Get PR branch
-        uses: xt0rted/pull-request-comment-branch@v1
+        uses: xt0rted/pull-request-comment-branch@v2
         id: comment-branch
       - name: Dump Jobs context
         env:
@@ -114,4 +113,4 @@ jobs:
         with:
           sha: ${{ steps.comment-branch.outputs.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          status: ${{ fromJson(needs.read.outputs.result).success.input && fromJson(needs.read.outputs.result).error.input }}
+          status: ${{ (fromJson(needs.read.outputs.result).success.output == 'success' && fromJson(needs.read.outputs.result).error.output == 'success') && 'success' || 'failure' }}
