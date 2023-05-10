@@ -5,10 +5,26 @@ on:
     types: [created]
 
 jobs:
+  set_pending:
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '/run-tests')
+    name: Set PR Pending
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Get PR branch
+        uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+      - name: Set latest commit status as pending
+        uses: myrotvorets/set-commit-status-action@master
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
+
   run_tests:
     if: github.event.issue.pull_request && contains(github.event.comment.body, '/run-tests')
-    name: Run Jest Tests
+    name: ${{ matrix.status }}-tests
     runs-on: ubuntu-22.04
+    needs: set_pending
     strategy:
       fail-fast: false
       matrix:
@@ -43,3 +59,22 @@ jobs:
           annotations: none
           prnumber: ${{ github.event.issue.number }}
           debug: ${{ matrix.status == 'error' }}
+
+  set_completed_status:
+    if: always()
+    name: Set Completed Status
+    runs-on: ubuntu-22.04
+    needs: [success-tests, error-tests]
+    steps:
+      - name: Dump Jobs context
+        env:
+          JOBS_CONTEXT: ${{ toJson(jobs) }}
+        run: |
+          echo "$JOBS_CONTEXT"
+      - name: Set latest commit status as ${{ job.status }}
+        uses: myrotvorets/set-commit-status-action@master
+        if: always()
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}

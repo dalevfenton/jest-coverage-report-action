@@ -114,7 +114,7 @@ export const getOptions = async (): Promise<Options> => {
     const prNumber: number | null = Number(
         getInput('prnumber') || context?.payload?.pull_request?.number
     );
-    const debug = getInput('debug');
+    const debug = getInput('debug') === 'true';
     const output = getInput('output');
 
     let pullRequest = context?.payload?.pull_request || null;
